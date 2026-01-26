@@ -11,7 +11,7 @@
 
 ## Topics
 
-* [Test suite timeout](https://github.com/nodejs/node/issues/59701): Wether test-cases should inherit the suite's timeout or use the global default
+* [Test suite timeout](https://github.com/nodejs/node/issues/59701): Whether test-cases should inherit the suite's timeout or use the global default
 * Pietro proposed an interactive test mode (similar to Jest's).
 
 ## Outcomes
