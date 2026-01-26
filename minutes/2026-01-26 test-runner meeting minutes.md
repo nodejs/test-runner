@@ -21,6 +21,6 @@
 * Interactive test mode
   * Ethan & Jacob were skeptical about the usefulness of adding UI for this (but like the core concept): it's already easily possible with smarter globs and potentially additional paths. Those features are perhaps less well-known, and Jacob pointed out the bizarre behaviour of `--test` (to Ethan's surprise). They felt the time would better spent improving and "fixing" the current tools and their interop.
 
-# Todos
+## Todos
 
 * Jacob to open a proposal for un/breaking `--test` and its potential interop with `--watch`.
