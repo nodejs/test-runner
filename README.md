@@ -17,3 +17,4 @@ Pull Requests: propose & plan features, add minuting minutes
 * Jacob Smith [@JakobJingleheimer](https://github.com/JakobJingleheimer) (chair)
 * Moshe Atlow [@MoLow](https://github.com/MoLow)
 * Pietro Marchini [@pmarchini](https://github.com/pmarchini)
+* Ethan Arrowood [@Ethan-Arrowood](https://github.com/Ethan-Arrowood)
