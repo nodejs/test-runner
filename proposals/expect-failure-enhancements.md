@@ -21,19 +21,16 @@ test('fails with a specific reason', {
 - **Validation**: None. It accepts *any* error.
 - **Output**: The reporter displays the string (e.g., `# EXPECTED FAILURE Bug #123...`).
 
-### 2. RegExp: Error Matcher
-When a **RegExp** is provided, it acts as a validator for the thrown error.
+### 2. RegExp: Error Matcher (via Object)
+Use the object form with the `with` property.
 
 ```js
 test('fails with matching error', {
-  expectFailure: /expected error message/
+  expectFailure: { with: /expected error message/ }
 }, () => {
   throw new Error('this is the expected error message');
 });
 ```
-- **Behavior**: The test passes **only if** the thrown error matches the regular expression.
-- **Validation**: Strict matching against the error message.
-- **Output**: Standard expected failure output.
 
 ### 3. Object: Reason & Validation
 When an **Object** is provided, it allows specifying both a failure reason and validation logic simultaneously.
@@ -42,7 +39,7 @@ When an **Object** is provided, it allows specifying both a failure reason and v
 test('fails with reason and specific error', {
   expectFailure: {
     message: 'Bug #123: Edge case behavior', // Reason
-    match: /Index out of bounds/             // Validation
+    with: /Index out of bounds/              // Validation
   }
 }, () => {
   throw new RangeError('Index out of bounds');
@@ -50,15 +47,34 @@ test('fails with reason and specific error', {
 ```
 - **Properties**:
     - `message` (String): The failure reason/label (displayed in reporter).
-    - `match` (RegExp | Object | Function): Validation logic (similar to `assert.throws` validation argument).
-- **Behavior**: The test passes **only if** the error matches the `match` criteria.
+    - `with` (RegExp | Object | Function | Class): Validation logic. This is passed directly to `assert.throws` validation argument, supporting all its capabilities.
+- **Behavior**: The test passes **only if** the error matches the `with` criteria.
 - **Output**: The reporter displays the `message`.
 
 ## Ambiguity Resolution
 Potential ambiguity is resolved by strict type separation:
 *   `typeof value === 'string'` → **Reason**
-*   `value instanceof RegExp` → **Matcher**
-*   `typeof value === 'object'` → **Both** (Explicit properties)
+*   `typeof value === 'object'` → **Configuration Object** (`message` and/or `with`)
+
+## Alternatives Considered
+
+### Flat Options (`expectFailureError`)
+It was proposed to split the options into `expectFailure` (reason) and `expectFailureError` (validation).
+```js
+{
+  expectFailure: 'reason',
+  expectFailureError: /error/
+}
+```
+This was rejected in favor of the nested object structure to:
+1.  Keep related configuration grouped.
+2.  Avoid polluting the top-level options namespace.
+3.  Allow future extensibility within the `expectFailure` object.
+
+## Implementation Details
+
+### Validation Logic
+The implementation leverages `assert.throws` internally to perform error validation. This ensures consistency with the existing assertion ecosystem and supports advanced validation (Classes, Custom Functions) out of the box without code duplication.
 
 ## Edge Cases & Implementation Details
 
