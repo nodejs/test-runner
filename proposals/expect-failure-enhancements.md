@@ -1,11 +1,11 @@
 # Feature proposal: `expectFailure` enhancements
 
 ## Summary
-Update the `expectFailure` option in `test()` to accept different types of values, enabling both **custom failure messages** and **error validation**. This aligns with `skip` and `todo` options while adding capabilities similar to `assert.throws`.
+Update the `expectFailure` option in `test()` to accept different types of values, enabling both **custom failure messages** and **error validation**. This proposal integrates the requirements from [nodejs/node#61570](https://github.com/nodejs/node/issues/61570), ensuring consistency with `skip`/`todo` while adding robust validation capabilities.
 
 ## API & Behavior
 
-The behavior of `expectFailure` is determined by the type of value provided:
+The behavior of `expectFailure` is strictly determined by the type of value provided:
 
 ### 1. String: Failure Reason
 When a **non-empty string** is provided, it acts as a documentation message (reason), identical to `skip` and `todo` options.
@@ -20,7 +20,6 @@ test('fails with a specific reason', {
 - **Behavior**: The test is expected to fail. The string is treated as a label/reason.
 - **Validation**: None. It accepts *any* error.
 - **Output**: The reporter displays the string (e.g., `# EXPECTED FAILURE Bug #123...`).
-- **Rationale**: Maintains consistency with existing `test` options where a string implies a reason/description.
 
 ### 2. RegExp: Error Matcher
 When a **RegExp** is provided, it acts as a validator for the thrown error.
@@ -36,24 +35,41 @@ test('fails with matching error', {
 - **Validation**: Strict matching against the error message.
 - **Output**: Standard expected failure output.
 
-## Ambiguity Resolution
-Potential ambiguity between "String as Reason" and "String as Matcher" is resolved by strict type separation:
-*   `typeof value === 'string'` → **Reason** (Documentation only)
-*   `value instanceof RegExp` → **Matcher** (Validation)
+### 3. Object: Reason & Validation
+When an **Object** is provided, it allows specifying both a failure reason and validation logic simultaneously.
 
-Users needing to match a specific string error message should use a RegExp (e.g., `/Error message/`) to avoid confusion.
+```js
+test('fails with reason and specific error', {
+  expectFailure: {
+    message: 'Bug #123: Edge case behavior', // Reason
+    match: /Index out of bounds/             // Validation
+  }
+}, () => {
+  throw new RangeError('Index out of bounds');
+});
+```
+- **Properties**:
+    - `message` (String): The failure reason/label (displayed in reporter).
+    - `match` (RegExp | Object | Function): Validation logic (similar to `assert.throws` validation argument).
+- **Behavior**: The test passes **only if** the error matches the `match` criteria.
+- **Output**: The reporter displays the `message`.
+
+## Ambiguity Resolution
+Potential ambiguity is resolved by strict type separation:
+*   `typeof value === 'string'` → **Reason**
+*   `value instanceof RegExp` → **Matcher**
+*   `typeof value === 'object'` → **Both** (Explicit properties)
 
 ## Edge Cases & Implementation Details
 
 ### Empty String (`expectFailure: ''`)
 Following standard JavaScript truthiness rules, an empty string should be treated as **falsy**.
-
 *   `expectFailure: ''` behaves exactly like `expectFailure: false`.
 *   The feature is **disabled**, and the test is expected to pass normally.
 
 ### Type Safety for `this.passed`
 The implementation must ensure that `this.passed` remains a strict `boolean`.
-Assigning a string directly (e.g., `this.passed = this.expectFailure`) is unsafe as it introduces type pollution (assigning `""` or `"reason"` instead of `false`/`true`).
+Assigning a string directly (e.g., `this.passed = this.expectFailure`) is unsafe as it introduces type pollution.
 
 **Recommended Implementation Logic:**
 ```javascript
