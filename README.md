@@ -14,6 +14,6 @@ Pull Requests: propose & plan features, add minuting minutes
 
 * Aviv Keller [@avivkeller](https://github.com/avivkeller)
 * Colin Ihrig [@cjihrig](https://github.com/cjihrig)
-* Jacob Smith [@JakobJingleheimer](https://github.com/JakobJingleheimer) (chair)
+* Jacob Smith [@JakobJingleheimer](https://github.com/JakobJingleheimer)
 * Moshe Atlow [@MoLow](https://github.com/MoLow)
 * Pietro Marchini [@pmarchini](https://github.com/pmarchini)
