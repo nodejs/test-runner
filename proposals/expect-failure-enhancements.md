@@ -58,10 +58,24 @@ test('fails with reason and specific error', {
 - **Output**: The reporter displays the `message`.
 
 ### Equivalence
-The following configurations are equivalent in behavior (both set a failure reason without validation):
+The following configurations are equivalent in behavior:
+
+**1. Reason only:**
 ```js
 expectFailure: 'reason'
 expectFailure: { message: 'reason' }
+```
+
+**2. Validation only:**
+```js
+expectFailure: /error/
+expectFailure: { with: /error/ }
+```
+
+**3. Catch-all (Any Error):**
+```js
+expectFailure: true
+expectFailure: {}
 ```
 
 ## Ambiguity Resolution
@@ -73,7 +87,12 @@ Potential ambiguity between a **Matcher Object** and a **Configuration Object** 
     *   If the object contains `with` or `message` properties → **Configuration Object**.
     *   Otherwise → **Matcher Object** (passed to `assert.throws` for property matching).
 
-## Alternatives Considered
+## Activation & Truthiness
+To maintain strict consistency with `todo` and `skip` options:
+*   The feature is **disabled** only if `expectFailure` is `undefined` or `false`.
+*   **All other values** enable the feature (treat as truthy).
+    *   `expectFailure: ''` (Empty String) → **Enabled** (treats as generic failure expectation).
+    *   `expectFailure: 0` → **Enabled** (treated as a Matcher Object unless specific logic excludes numbers, but per consistency it enables the feature).
 
 ### Flat Options (`expectFailureError`)
 It was proposed to split the options into `expectFailure` (reason) and `expectFailureError` (validation).
@@ -88,10 +107,3 @@ This approach keeps related configuration grouped without polluting the top-leve
 The implementation leverages `assert.throws` internally to perform error validation.
 - If `expectFailure` is a Matcher (RegExp, Class, Object), it is passed as the second argument to `assert.throws(fn, expectFailure)`.
 - If `expectFailure` is a Configuration Object, `expectFailure.with` is passed to `assert.throws`.
-
-## Edge Cases
-
-### Empty String (`expectFailure: ''`)
-To maintain consistency with `todo` and `skip` options, an empty string is treated as **truthy** (enabled).
-*   `expectFailure: ''` behaves like `expectFailure: true`.
-*   The feature is **enabled** (expects failure), but without a specific reason label.
