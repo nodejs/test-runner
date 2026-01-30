@@ -75,7 +75,6 @@ expectFailure: { with: /error/ }
 **3. Catch-all (Any Error):**
 ```js
 expectFailure: true
-expectFailure: {}
 ```
 
 ## Ambiguity Resolution
@@ -84,6 +83,15 @@ Potential ambiguity between a **Matcher Object** and a **Configuration Object** 
 1.  **String** → Reason.
 2.  **RegExp** or **Function** → Matcher (Validation).
 3.  **Object**:
+    *   **Empty Object** (`{}`) → **Error**: throws `ERR_INVALID_ARG_VALUE`.
+        ```js
+        // Uses Node.js standard error code
+        throw new ERR_INVALID_ARG_VALUE(
+          'expectFailure',
+          expectFailure,
+          'must not be an empty object'
+        );
+        ```
     *   If the object contains `with` or `message` properties → **Configuration Object**.
     *   Otherwise → **Matcher Object** (passed to `assert.throws` for property matching).
 
