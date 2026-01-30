@@ -21,19 +21,25 @@ test('fails with a specific reason', {
 - **Validation**: None. It accepts *any* error.
 - **Output**: The reporter displays the string (e.g., `# EXPECTED FAILURE Bug #123...`).
 
-### 2. RegExp: Error Matcher (via Object)
-Use the object form with the `with` property.
+### 2. Matcher: RegExp, Class, or Error Object
+When a **RegExp**, **Class** (Function), or **Error Object** is provided directly, it acts as the validation logic. This leverages `assert.throws` behavior directly.
 
 ```js
-test('fails with matching error', {
-  expectFailure: { with: /expected error message/ }
+test('fails with matching error (RegExp)', {
+  expectFailure: /expected error message/
 }, () => {
   throw new Error('this is the expected error message');
 });
+
+test('fails with matching error (Class)', {
+  expectFailure: RangeError
+}, () => {
+  throw new RangeError('Index out of bounds');
+});
 ```
 
-### 3. Object: Reason & Validation
-When an **Object** is provided, it allows specifying both a failure reason and validation logic simultaneously.
+### 3. Configuration Object: Reason & Validation
+When a **Plain Object** with specific properties (`with`, `message`) is provided, it allows specifying both a failure reason and validation logic simultaneously.
 
 ```js
 test('fails with reason and specific error', {
@@ -51,46 +57,41 @@ test('fails with reason and specific error', {
 - **Behavior**: The test passes **only if** the error matches the `with` criteria.
 - **Output**: The reporter displays the `message`.
 
+### Equivalence
+The following configurations are equivalent in behavior (both set a failure reason without validation):
+```js
+expectFailure: 'reason'
+expectFailure: { message: 'reason' }
+```
+
 ## Ambiguity Resolution
-Potential ambiguity is resolved by strict type separation:
-*   `typeof value === 'string'` → **Reason**
-*   `typeof value === 'object'` → **Configuration Object** (`message` and/or `with`)
+Potential ambiguity between a **Matcher Object** and a **Configuration Object** is resolved as follows:
+
+1.  **String** → Reason.
+2.  **RegExp** or **Function** → Matcher (Validation).
+3.  **Object**:
+    *   If the object contains `with` or `message` properties → **Configuration Object**.
+    *   Otherwise → **Matcher Object** (passed to `assert.throws` for property matching).
 
 ## Alternatives Considered
 
 ### Flat Options (`expectFailureError`)
 It was proposed to split the options into `expectFailure` (reason) and `expectFailureError` (validation).
-```js
-{
-  expectFailure: 'reason',
-  expectFailureError: /error/
-}
-```
-This was rejected in favor of the nested object structure to:
-1.  Keep related configuration grouped.
-2.  Avoid polluting the top-level options namespace.
-3.  Allow future extensibility within the `expectFailure` object.
+This was rejected in favor of the nested/polymorphic structure using `with` and `message` properties. This syntax was selected as the preferred choice for its readability and clarity:
+*   `with`: Clearly indicates "fails **with** this error" (Validation).
+*   `message`: Clearly indicates the **reason** or label for the expected failure.
+This approach keeps related configuration grouped without polluting the top-level options namespace.
 
 ## Implementation Details
 
 ### Validation Logic
-The implementation leverages `assert.throws` internally to perform error validation. This ensures consistency with the existing assertion ecosystem and supports advanced validation (Classes, Custom Functions) out of the box without code duplication.
+The implementation leverages `assert.throws` internally to perform error validation.
+- If `expectFailure` is a Matcher (RegExp, Class, Object), it is passed as the second argument to `assert.throws(fn, expectFailure)`.
+- If `expectFailure` is a Configuration Object, `expectFailure.with` is passed to `assert.throws`.
 
-## Edge Cases & Implementation Details
+## Edge Cases
 
 ### Empty String (`expectFailure: ''`)
 Following standard JavaScript truthiness rules, an empty string should be treated as **falsy**.
 *   `expectFailure: ''` behaves exactly like `expectFailure: false`.
 *   The feature is **disabled**, and the test is expected to pass normally.
-
-### Type Safety for `this.passed`
-The implementation must ensure that `this.passed` remains a strict `boolean`.
-Assigning a string directly (e.g., `this.passed = this.expectFailure`) is unsafe as it introduces type pollution.
-
-**Recommended Implementation Logic:**
-```javascript
-// When an error is caught:
-this.passed = !!this.expectFailure; // Forces conversion to boolean
-```
-*   If `expectFailure` is `"reason"` → `true` (Test Passes)
-*   If `expectFailure` is `""` → `false` (Test Fails, as expected failure was not active)
