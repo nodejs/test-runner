@@ -92,6 +92,6 @@ The implementation leverages `assert.throws` internally to perform error validat
 ## Edge Cases
 
 ### Empty String (`expectFailure: ''`)
-Following standard JavaScript truthiness rules, an empty string should be treated as **falsy**.
-*   `expectFailure: ''` behaves exactly like `expectFailure: false`.
-*   The feature is **disabled**, and the test is expected to pass normally.
+To maintain consistency with `todo` and `skip` options, an empty string is treated as **truthy** (enabled).
+*   `expectFailure: ''` behaves like `expectFailure: true`.
+*   The feature is **enabled** (expects failure), but without a specific reason label.
