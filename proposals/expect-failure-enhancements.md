@@ -21,11 +21,11 @@ test('fails with a specific reason', {
 ```
 - **Behavior**: The test is expected to fail. The string is treated as a label/reason.
 - **Validation**: None. It accepts _any_ error.
-- **Output**: The reporter displays the string literally (e.g., `# EXPECTED FAILURE Bug #123…`).
+- **Output**: The reporter displays the string literally, prefixed by a TAP comment character (e.g., `# EXPECTED FAILURE Bug #123…`).
 
 ### Matcher: Error constructor, Error-like object, RegExp, or validation function
 
-When a `Error` constructor, `Error`-like object, `RegExp`, or validation function is provided, it is treated as validation to match against, mirroring the behaviour of [`assert.throws`](https://nodejs.org/docs/latest-v25.x/api/assert.html#assertthrowsfn-error-message) (possibly leveraging it under the hood).
+When an `Error` constructor, `Error`-like object, `RegExp`, or validation function is provided, it is treated as validation to match against, mirroring the behaviour of [`assert.throws`](https://nodejs.org/docs/latest-v25.x/api/assert.html#assertthrowsfn-error-message) (possibly leveraging it under the hood).
 
 ```js
 test('fails with matching error (RegExp)', {
@@ -58,6 +58,7 @@ test('fails with reason and specific error', {
 - **Properties**:
     - `label` (String): The failure reason/label (displayed in reporter).
     - `match` (RegExp | Object | Function | Class): Validation logic. This is passed directly to `assert.throws` validation argument, supporting all its capabilities.
+- **Requirement**: The object must contain at least one of `label` or `match`.
 - **Behavior**: The test passes **only if** the error matches the `match` criteria.
 - **Output**: The reporter displays the `label`.
 
@@ -100,9 +101,12 @@ Potential ambiguity between a **Matcher Object** and a **Configuration Object** 
     *   Otherwise → **Matcher Object** (passed to `assert.throws` for property matching).
 
 ## Activation & Truthiness
+
 To maintain strict consistency with `todo` and `skip` options:
-* The feature is **disabled** if `expectFailure` is **falsy** (e.g., `false`, `null`, `undefined`, `0`, `''`).
-* **Truthy values** enable the feature.
+*   The feature is **disabled** only if `expectFailure` is `undefined` or `false`.
+*   **All other values** enable the feature (treat as truthy).
+    *   `expectFailure: ''` (Empty String) → **Enabled** (treats as generic failure expectation).
+    *   `expectFailure: 0` → **Enabled** (treated as a Matcher Object unless specific logic excludes numbers, but per consistency it enables the feature).
 
 ### Flat Options (`expectFailureError`)
 
