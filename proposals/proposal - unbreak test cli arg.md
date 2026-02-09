@@ -42,6 +42,96 @@ node
 
 ## Proposed options
 
+### Option: n-number of `--test`s + `--watch-path`
+
+`--test` is no-longer positional, accepting 1 value per occurrance of the flag. Supplying any value will override the default glob path.
+
+When combined with test mode, `--watch`'s value is ignored (treated as an "on" flag)
+
+`--watch-path` supplies additional paths to trigger the test-runner to re-run.
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Code sample</th>
+      <th>Resulting <code>--test</code> value</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+Test & watch modes enabled with defaults
+</td>
+<td>
+
+```sh
+node
+  --test
+  --watch
+```
+
+</td>
+<td>
+
+`**/*.test.{cjs,cts,mjs,mts,js,ts}`
+etc
+
+https://nodejs.org/api/test.html#running-tests-from-the-command-line
+
+</td>
+</tr>
+
+<tr>
+<td>
+Test & watch modes enabled, overriding default
+</td>
+<td>
+
+```sh
+node
+  --test ./src/foo/*.test.js
+  --watch
+```
+
+</td>
+<td>
+
+`./src/foo/*.test.js`
+
+</td>
+</tr>
+
+<tr>
+<td>
+Test & watch modes enabled, multiple test paths & additional watch paths
+</td>
+<td>
+
+```sh
+node
+  --test ./src/foo/*.test.js
+  --test ./src/bar/*.test.js
+  --watch
+  --watch-path ./src/quz/fixt.json
+```
+
+</td>
+<td>
+
+`./src/foo/*.test.js`
+`./src/bar/*.test.js`
+
+In addition to changes within the graph of those test, tests will also re-run if `./src/quz/fixt.json` changes.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
 ### Option: Break all the things
 
 Currently `watch` has 2 flags (which are redundant):
