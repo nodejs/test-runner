@@ -33,6 +33,8 @@ This is similar to another existing feature with which we want to improve intero
 * enables `watch` mode
 * optionally accepts 1 value to override the entrypoint
 
+`--watch-path` sets additional paths to include as well as the entrypoint.
+
 ```sh
 node
   --watch
@@ -76,10 +78,7 @@ node
 </td>
 <td>
 
-`**/*.test.{cjs,cts,mjs,mts,js,ts}`
-etc
-
-https://nodejs.org/api/test.html#running-tests-from-the-command-line
+`**/*.test.{cjs,cts,mjs,mts,js,ts}`, [etc](https://nodejs.org/api/test.html#running-tests-from-the-command-line)
 
 </td>
 </tr>
@@ -100,6 +99,29 @@ node
 <td>
 
 `./src/foo/*.test.js`
+
+</td>
+</tr>
+</tr>
+
+<tr>
+<td>
+Test & watch modes enabled, using default & an additional path
+</td>
+<td>
+
+```sh
+node
+  --test
+  --test ./src/foo/*.test.js
+  --watch
+```
+
+</td>
+<td>
+
+`./src/foo/*.test.js`
+`**/*.test.{cjs,cts,mjs,mts,js,ts}`, [etc](https://nodejs.org/api/test.html#running-tests-from-the-command-line)
 
 </td>
 </tr>
@@ -156,31 +178,24 @@ node --watch
 ```sh title='override derived entrypoint'
 node --watch ./src/not-pjson-main.js
 ```
-```sh title='package.json "main" + an additional path'
-node --watch ./src/**/*.js
-```
-```sh title='explicit entrypoint + additional paths'
+```sh title='package.json "main" + additional paths'
 node
-  --watch ./assets/**
+  --watch
   --watch ./src/**/*.js
-  ./src/not-pjson-main.js
+  --watch ./src/not-pjson-main.js
 ```
 
-An explicit entrypoint, like all node commands, must come last and must be a relative or absolute path (not a glob/pattern).
-
-`test` would then work the same way:
-
-```sh title='reads "main" etc from package.json'
+```sh title='use default'
 node --test
 ```
-```sh title='package.json "main" + an additional path'
-node --test ./src/**/*.test.js
+```sh title='override default with one or more paths'
+node --test ./src/bar/*.test.js
 ```
-```sh title='explicit entrypoint + an additional path'
+```sh title='use default with one or more additional paths'
 node
+  --test
   --test ./src/foo/*.test.js
   --test ./src/bar/*.test.js
-  ./src/not-pjson-main.js
 ```
 
 #### All together
@@ -189,24 +204,7 @@ node
 
 All examples are sequence-independent (all within the same heading behave the same).
 
-##### Watch + test paths & main entrypoint:
-
-```sh
-node
-  --test ./src/foo/*.test.js
-  --test ./src/bar/*.test.js
-  --watch
-  ./src/not-pjson-main.js
-```
-```sh
-node
-  --watch
-  --test ./src/foo/*.test.js
-  --test ./src/bar/*.test.js
-  ./src/not-pjson-main.js
-```
-
-##### Without an entrypoint (just paths):
+##### Test & watch mode enabled:
 
 ```sh
 node
@@ -221,19 +219,13 @@ node
   --test ./src/bar/*.test.js
 ```
 
-##### _Additional_ watch paths
+##### Test & watch mode enabled with _additional_ watch path:
 
 ```sh
 node
   --test ./src/foo/*.test.js
   --test ./src/bar/*.test.js
-  --watch ./src/**/*.js
-```
-```sh
-node
-  --watch ./src/**/*.js
-  --test ./src/foo/*.test.js
-  --test ./src/bar/*.test.js
+  --watch ./src/something-else.js
 ```
 
 ### Option: Apply `--watch`'s current design to `--test`
@@ -306,11 +298,11 @@ node
 </td>
 <td>
 
-`./src/**/*.test.(c|m)?(j|t)s`
+`**/*.test.{cjs,cts,mjs,mts,js,ts}`, [etc](https://nodejs.org/api/test.html#running-tests-from-the-command-line)
 ~`./src/foo/*.test.js`~
 ~`./src/bar/*.test.js`~
 
-which reduces to only the default: `./src/**/*.test.(c|m)?(j|t)s`
+which reduces to only the default
 
 </td>
 </tr>
