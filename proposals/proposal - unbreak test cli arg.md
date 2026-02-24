@@ -212,12 +212,6 @@ node
   --test ./src/bar/*.test.js
   --watch
 ```
-```sh
-node
-  --watch
-  --test ./src/foo/*.test.js
-  --test ./src/bar/*.test.js
-```
 
 ##### Test & watch mode enabled with _additional_ watch path:
 
