@@ -123,3 +123,107 @@ This approach keeps related configuration grouped without polluting the top-leve
 The implementation leverages `assert.throws` internally to perform error validation.
 - If `expectFailure` is a Matcher (RegExp, Class, Object), it is passed as the second argument to `assert.throws(fn, expectFailure)`.
 - If `expectFailure` is a Configuration Object, `expectFailure.match` is passed to `assert.throws`.
+
+
+## Concern: Is the API unnecessarily unfriendly?
+
+RE: 
+- https://github.com/nodejs/node/pull/61563#discussion_r2816731854
+- https://github.com/nodejs/node/pull/61563#pullrequestreview-3813501699
+- https://github.com/nodejs/node/pull/61563#issuecomment-3955179634
+
+The `expectFailure` option as designed above and implemented in
+nodejs/node#61563 is powerful. But it is also complicated and
+surprising (in a bad way). While we can fully document this, and add
+test coverage as I suggested to lock down all the quirks and forestall
+unintended behavioral drift, I'm still concerned about the DX.
+
+Some developers may lose a lot of time and hair (lost to pulling) until
+they finally internalizes the reasoning behind the quirks. 
+
+### Illustration
+
+Let me illustrate by progressive example, just as the developer might
+progressively learn the API:
+
+```js
+test('label only', {
+         expectFailure: {
+             label: 'Bug #124',
+         }
+     }, <throws>)
+
+// oh cool, I can specify the error by expected message
+test('expected error message', {
+         expectFailure: {
+             match: /expected message/
+         }
+     }, <throws 'expected message'>)
+
+// but I still want the label
+test('label + expected error message', {
+         expectFailure: {
+             label: 'Bug #124',
+             match: /expected message/
+         }
+     }, <throws 'expected message'>)
+
+// oh cool, I can also specify the error by error code
+test('expected error code', {
+         expectFailure: {
+             code: 'ERR_TEST',
+         }
+     }, <throws code: ERR_TEST>)
+
+// but again, I still want the label
+test('label + expected error code', {
+         expectFailure: {
+             label: 'Bug #124',
+             code: 'ERR_TEST'
+         }
+     }, <throws code: ERR_TEST>)
+```
+
+The last test will fail, surprisingly if you don't grok the
+ins-and-outs of `expectFailure`.
+
+But strangely, if the developer removes `label`,
+it passes again. After possibly hours of hair pulling,
+they figure out it has to been done like so:
+
+```js
+test('label + expected error code (CORRECTED)', {
+         expectFailure: {
+             label: 'Bug #124',
+             match: {code: 'ERR_TEST'}
+         }
+     }, <throws code: ERR_TEST>)
+```
+
+Not very ideal. 
+
+### Options
+
+Here are the options I can think of:
+
+- (A) current PR, as above, with explanatory WARNING messages to mitigate
+  confusion, e.g. when `label` is combined with anything other than `match`.
+
+- (B) same as option A, but ERROR instead of WARNING message. i.e. disallow
+  ambiguous combinations.
+
+- (C) like current PR, but nix the shortcut for specifying the error:
+  - ❌ `expectFailure: /expected message/` 
+  - ✅ `expectFailure: {match: /expected message/}`
+
+  pseudo-type:
+  ```ts
+  type expectFailure = NON_EMPTY_STRING_AS_LABEL | 
+                       {label?: 'label', match?: <same as assert.throws>} |
+                       ANYTHING_ELSE_FALSEY
+  ```
+
+- (D) split it into:
+  - `expectFailure`: same simplicity as `todo`/`fail`: falsy with
+     non-empty string for label
+  - `expectFailureError`: specify expected error, same types as `assert.throws`
