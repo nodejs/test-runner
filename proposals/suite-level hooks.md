@@ -2,7 +2,7 @@
 
 ## Problem(s) to solve
 
-* Hooks (`after`/`afterEach`, `before`/`beforeEach`) are currently global, which causes them to trigger for subtests. That is often counter-productive, rendering subtests useless (they end up clobbering each other).
+* Hooks (`afterEach`, `beforeEach`) are currently global, which causes them to trigger for subtests. That is often counter-productive, rendering subtests useless (they end up clobbering each other).
 * Tests often need common setup but are affected by concurrency (for instance, mocks). In those scenarios, either concurrency must be disabled or a lot of code must be repeated.
   * For mocks, it is generally desirable to reset them between tests.
 
@@ -21,9 +21,7 @@ type SuiteContextHook = (
 );
 type SuiteContext = {
   // …
-  after: SuiteContextHook,
   afterEach: SuiteContextHook,
-  before: SuiteContextHook,
   beforeEach: SuiteContextHook,
   mock: SuiteContextMockTracker → MockTracker,
 }
@@ -40,7 +38,7 @@ type TestContext = {
 
 ```js
 describe('Suite-level hooks', (s) => {
-  s.before((th) => {
+  s.beforeEach((th) => {
     const foo = s.mock.fn();
     s.mock.module('foo', { exports: { default: foo } });
     const bar = s.mock.fn();
